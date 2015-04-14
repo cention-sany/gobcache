@@ -1,10 +1,11 @@
-package cache
+package gobcache
 
 import (
 	"bytes"
 	"encoding/gob"
-	"github.com/bradfitz/gomemcache/memcache"
 	"log"
+
+	"github.com/bradfitz/gomemcache/memcache"
 )
 
 var mc = memcache.New("localhost:11211")
@@ -43,4 +44,13 @@ func GetFromMemcache(key string, data interface{}) error {
 	}
 
 	return nil
+}
+func FlushMemcache() {
+	mc.FlushAll()
+}
+func DeleteFromMemcache(key string) {
+	mc.Delete(key)
+}
+func DeleteAllFromMemcache() {
+	mc.DeleteAll()
 }
