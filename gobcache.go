@@ -45,6 +45,12 @@ func GetFromMemcache(key string, data interface{}) error {
 
 	return nil
 }
+
+func GetRawFromMemcache(key string) (*memcache.Item, error) {
+	item, err := mc.Get(key)
+	return item, err
+}
+
 func FlushMemcache() {
 	mc.FlushAll()
 }
