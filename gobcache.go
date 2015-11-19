@@ -21,7 +21,6 @@ func SaveInMemcache(key string, toStore interface{}) error {
 		Key:   key,
 		Value: data.Bytes(),
 	}
-
 	if err := mc.Set(item); err != nil && err != memcache.ErrNoServers {
 		log.Println("Datastore - `SaveInMemcache` ", err)
 		return err

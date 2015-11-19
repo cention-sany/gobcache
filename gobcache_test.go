@@ -38,6 +38,27 @@ func TestSaveArrayInMemcache(t *testing.T) {
 		t.Errorf("[TestSaveInMemcache]->Key[%s]:\nWant: %v\n Got: %v", key, want, got)
 	}
 
+}	
+type Cookie struct {
+	UserId        int
+	LastLoginTime int64
+	LoggedIn      bool
+}
+
+func TestFetchKeys(t *testing.T){
+	key := "SSS_MTQ0NzkyMzQ5NXxaUGVLOWJ3YzdXSDZqblo4dWJIOF9wSVN3eXZZZzFiSTZvaXFXYXhmWWQ4T2pwQ2poaVhBVW5hdDlKS0RSTE5Velc5cV9fMjY4QVlCZXhjSThkeFU4ZTg0fB7AnGKfhELQGLOjw0vQhPmJvPY5Vpj5H0yzLWtqvQtb"
+	want := &Cookie{
+		2,1447925985,true,
+	}	
+	got := new(Cookie)
+	err := GetFromMemcache(key, &got)
+	if err != nil {
+		t.Error(err)
+	}
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("[TestFetchKeys]->Key[%s]:\nWant: %v\n Got: %v", key, want, got)
+	}
+
 }
 
 func TestSaveStructMemcache(t *testing.T) {
