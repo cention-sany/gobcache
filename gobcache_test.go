@@ -1,6 +1,7 @@
 package gobcache
 
 import (
+	"log"
 	"reflect"
 	"testing"
 )
@@ -55,6 +56,29 @@ func TestFetchKeys(t *testing.T){
 	if err != nil {
 		t.Error(err)
 	}
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("[TestFetchKeys]->Key[%s]:\nWant: %v\n Got: %v", key, want, got)
+	}
+
+}
+
+type Cookie struct {
+	UserId        int
+	LastLoginTime int64
+	LoggedIn      bool
+}
+
+func TestFetchKeys(t *testing.T) {
+	key := "Session_MTQ0Nzk5OTYyNnwyUlJRRm93eW9BQm1Bc3M2OE9jWDlhOHMtRGpCd1hSWExDNldhdElybGZZX1V4ZWxPMGlkaG5WenNlZXJOMDFKZURYMGNSbmdpT2tURFFGQUFJQl8yWHBXfILxGWO0ac0DQuQwt8MXSmXaSjKmTEczJ9cafN4gKzs4"
+	want := &Cookie{
+		2, 1447925985, true,
+	}
+	got := new(Cookie)
+	err := GetFromMemcache(key, &got)
+	if err != nil {
+		t.Error(err)
+	}
+	log.Println("Got:", got)
 	if !reflect.DeepEqual(want, got) {
 		t.Errorf("[TestFetchKeys]->Key[%s]:\nWant: %v\n Got: %v", key, want, got)
 	}

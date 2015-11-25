@@ -8,7 +8,12 @@ import (
 	"github.com/bradfitz/gomemcache/memcache"
 )
 
-var mc = memcache.New("localhost:11211")
+var mc = &memcache.Client{}
+var MemcacheStatus bool
+
+func SetHostAndPort(hostPort string) {
+	mc = memcache.New(hostPort)
+}
 
 func SaveInMemcache(key string, toStore interface{}) error {
 	var data bytes.Buffer
@@ -42,6 +47,18 @@ func GetFromMemcache(key string, data interface{}) error {
 		return err
 	}
 
+	return nil
+}
+
+func SetRawToMemcache(key string, toStore string) error {
+	item := &memcache.Item{
+		Key:   key,
+		Value: []byte(toStore),
+	}
+	if err := mc.Set(item); err != nil && err != memcache.ErrNoServers {
+		log.Println("RawDataSave - `SetRawToMemcache` ", err)
+		return err
+	}
 	return nil
 }
 
