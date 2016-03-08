@@ -1,20 +1,23 @@
 package gobcache
 
 import (
-	"log"
 	"reflect"
 	"testing"
+)
+
+var (
+	HostnPort = "localhost:11211"
 )
 
 func TestSaveInMemcache(t *testing.T) {
 	key := "cention"
 	value := "cention contact centre"
 	want := "cention contact centre"
-	if err := SaveInMemcache(key, value); err != nil {
+	if err := SaveInMemcache(key, value, HostnPort); err != nil {
 		t.Error(err)
 	}
 	var got string
-	err := GetFromMemcache(key, &got)
+	err := GetFromMemcache(key, &got, HostnPort)
 	if err != nil {
 		t.Error(err)
 	}
@@ -27,37 +30,16 @@ func TestSaveInMemcache(t *testing.T) {
 func TestSaveArrayInMemcache(t *testing.T) {
 	key := "cention1"
 	want := []string{"cention contact centre", "Test", "Test2"}
-	if err := SaveInMemcache(key, want); err != nil {
+	if err := SaveInMemcache(key, want, HostnPort); err != nil {
 		t.Error(err)
 	}
 	var got []string
-	err := GetFromMemcache(key, &got)
+	err := GetFromMemcache(key, &got, HostnPort)
 	if err != nil {
 		t.Error(err)
 	}
 	if !reflect.DeepEqual(want, got) {
 		t.Errorf("[TestSaveInMemcache]->Key[%s]:\nWant: %v\n Got: %v", key, want, got)
-	}
-
-}	
-type Cookie struct {
-	UserId        int
-	LastLoginTime int64
-	LoggedIn      bool
-}
-
-func TestFetchKeys(t *testing.T){
-	key := "SSS_MTQ0NzkyMzQ5NXxaUGVLOWJ3YzdXSDZqblo4dWJIOF9wSVN3eXZZZzFiSTZvaXFXYXhmWWQ4T2pwQ2poaVhBVW5hdDlKS0RSTE5Velc5cV9fMjY4QVlCZXhjSThkeFU4ZTg0fB7AnGKfhELQGLOjw0vQhPmJvPY5Vpj5H0yzLWtqvQtb"
-	want := &Cookie{
-		2,1447925985,true,
-	}	
-	got := new(Cookie)
-	err := GetFromMemcache(key, &got)
-	if err != nil {
-		t.Error(err)
-	}
-	if !reflect.DeepEqual(want, got) {
-		t.Errorf("[TestFetchKeys]->Key[%s]:\nWant: %v\n Got: %v", key, want, got)
 	}
 
 }
@@ -69,18 +51,21 @@ type Cookie struct {
 }
 
 func TestFetchKeys(t *testing.T) {
-	key := "Session_MTQ0Nzk5OTYyNnwyUlJRRm93eW9BQm1Bc3M2OE9jWDlhOHMtRGpCd1hSWExDNldhdElybGZZX1V4ZWxPMGlkaG5WenNlZXJOMDFKZURYMGNSbmdpT2tURFFGQUFJQl8yWHBXfILxGWO0ac0DQuQwt8MXSmXaSjKmTEczJ9cafN4gKzs4"
-	want := &Cookie{
-		2, 1447925985, true,
-	}
-	got := new(Cookie)
-	err := GetFromMemcache(key, &got)
+	HostPort := "localhost:11311"
+	key := "Session_MTQ1NzQwMzY5NHxFeGF6dmJjWFlJcTBJV0ZBZm4xV0dCZDZ2UGYydnQzMlV0aFdZUVZkdUswbndjVnpYSkhTdjdkVGVxQlFmRkduYk43VHFZLWlBWFh0VEJGZWNxUHRySDFtfOij83kJOfkNapmefRIVM4TUahF0MagwoxmhTn768DoC"
+	//	want := &Cookie{
+	//		3, 1457416558, true,
+	//	}
+	//got := new(Cookie)
+	want := "3/1457419037/true"
+	get := ""
+	sItems, err := GetRawFromMemcache(key, HostPort)
 	if err != nil {
 		t.Error(err)
 	}
-	log.Println("Got:", got)
-	if !reflect.DeepEqual(want, got) {
-		t.Errorf("[TestFetchKeys]->Key[%s]:\nWant: %v\n Got: %v", key, want, got)
+	get = string(sItems.Value)
+	if want == get {
+		t.Errorf("[TestFetchKeys]->Key[%s]:\nWant: %v\n Got: %v", key, want, get)
 	}
 
 }
@@ -95,10 +80,10 @@ func TestSaveStructMemcache(t *testing.T) {
 	want.Name = "Mujibur"
 	want.Id = 9007
 	want.Country = "BD"
-	if err := SaveInMemcache(key, want); err != nil {
+	if err := SaveInMemcache(key, want, HostnPort); err != nil {
 		t.Error(err)
 	}
-	if err := GetFromMemcache(key, &got); err != nil {
+	if err := GetFromMemcache(key, &got, HostnPort); err != nil {
 		t.Error(err)
 	}
 	if !reflect.DeepEqual(want, got) {
@@ -121,19 +106,19 @@ func TestAnonymousSaveInMemcache(t *testing.T) {
 		{"Mujibur", map[string]string{"as": "cention contact centre", "a1": "Test", "b2": "Test2"}},
 		{"Mujibur1", map[string]string{"as": "cention contact centre1", "a1": "Test1", "b2": "Test21"}},
 	}
-	if err := SaveInMemcache(key, want); err != nil {
+	if err := SaveInMemcache(key, want, HostnPort); err != nil {
 		t.Error(err)
 	}
 
-	if err := GetFromMemcache(key, &got); err != nil {
+	if err := GetFromMemcache(key, &got, HostnPort); err != nil {
 		t.Error(err)
 	}
-	if reflect.DeepEqual(want, got) {
-		t.Errorf("[TestSaveStructMemcache] ->Key[%s]:\nWant: %v\n Got: %v", key, want, got)
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("[TestAnonymousSaveInMemcache] ->Key[%s]:\nWant: %v\n Got: %v", key, want, got)
 	}
 }
 
 func TestDeleteMemcache(t *testing.T) {
 	//FlushMemcache()
-	DeleteFromMemcache("cention")
+	DeleteFromMemcache("cention", HostnPort)
 }
