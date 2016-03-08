@@ -8,15 +8,20 @@ import (
 	"github.com/bradfitz/gomemcache/memcache"
 )
 
-var mc = &memcache.Client{}
-var MemcacheStatus bool
+type Cache struct {
+	mc *memcache.Client
+}
+
+func NewCache(hostAndPort string) *Cache {
+	return &Cache{mc: memcache.New(hostAndPort)}
+}
 
 func init() {
 	gob.Register(map[string]interface{}{})
 	gob.Register([]map[string]interface{}{})
 }
 
-func SaveInMemcache(key string, toStore interface{}, HostnPort string) error {
+func (c *Cache) SaveInMemcache(key string, toStore interface{}) error {
 	var data bytes.Buffer
 	enc := gob.NewEncoder(&data)
 	if err := enc.Encode(toStore); err != nil {
@@ -27,19 +32,18 @@ func SaveInMemcache(key string, toStore interface{}, HostnPort string) error {
 		Key:   key,
 		Value: data.Bytes(),
 	}
-	mc = memcache.New(HostnPort)
-	if err := mc.Set(item); err != nil && err != memcache.ErrNoServers {
-		log.Println("Datastore - `SaveInMemcache` ", err)
+
+	if err := c.mc.Set(item); err != nil && err != memcache.ErrNoServers {
+		log.Println("Error on `SaveInMemcache`: ", err)
 		return err
 	}
 	return nil
 }
 
-func GetFromMemcache(key string, data interface{}, HostnPort string) error {
-	mc = memcache.New(HostnPort)
-	item, err := mc.Get(key)
-	if err != nil && err != memcache.ErrCacheMiss { //Error if nil and key not exists
-		log.Println("FetchData - `GetFromMemcache` error: ", err)
+func (c *Cache) GetFromMemcache(key string, data interface{}) error {
+	item, err := c.mc.Get(key)
+	if err != nil && err != memcache.ErrCacheMiss {
+		log.Println("Error on `GetFromMemcache`: ", err)
 		return err
 	} else if err == memcache.ErrCacheMiss {
 		return err
@@ -53,34 +57,29 @@ func GetFromMemcache(key string, data interface{}, HostnPort string) error {
 	return nil
 }
 
-func SetRawToMemcache(key, toStore, HostnPort string) error {
+func (c *Cache) SetRawToMemcache(key, toStore string) error {
 	item := &memcache.Item{
 		Key:   key,
 		Value: []byte(toStore),
 	}
-	mc = memcache.New(HostnPort)
-	if err := mc.Set(item); err != nil && err != memcache.ErrNoServers {
-		log.Println("RawDataSave - `SetRawToMemcache` ", err)
+	if err := c.mc.Set(item); err != nil && err != memcache.ErrNoServers {
+		log.Println("Error `SetRawToMemcache`: ", err)
 		return err
 	}
 	return nil
 }
 
-func GetRawFromMemcache(key, HostnPort string) (*memcache.Item, error) {
-	mc = memcache.New(HostnPort)
-	item, err := mc.Get(key)
+func (c *Cache) GetRawFromMemcache(key string) (*memcache.Item, error) {
+	item, err := c.mc.Get(key)
 	return item, err
 }
 
-func FlushMemcache(HostnPort string) {
-	mc = memcache.New(HostnPort)
-	mc.FlushAll()
+func (c *Cache) FlushMemcache() {
+	c.mc.FlushAll()
 }
-func DeleteFromMemcache(key string, HostnPort string) {
-	mc = memcache.New(HostnPort)
-	mc.Delete(key)
+func (c *Cache) DeleteFromMemcache(key string) {
+	c.mc.Delete(key)
 }
-func DeleteAllFromMemcache(HostnPort string) {
-	mc = memcache.New(HostnPort)
-	mc.DeleteAll()
+func (c *Cache) DeleteAllFromMemcache() {
+	c.mc.DeleteAll()
 }
