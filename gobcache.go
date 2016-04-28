@@ -4,12 +4,15 @@ import (
 	"bytes"
 	"encoding/gob"
 	"log"
-
+	"sync"
+	"regexp"
 	"github.com/bradfitz/gomemcache/memcache"
 )
 
 type Cache struct {
 	mc *memcache.Client
+	lock sync.RWMutex
+    key map[string]string
 }
 
 func NewCache(hostAndPort string) *Cache {
@@ -37,6 +40,8 @@ func (c *Cache) SaveInMemcache(key string, toStore interface{}) error {
 		log.Println("Error on `SaveInMemcache`: ", err)
 		return err
 	}
+	c.SetKey(key)
+
 	return nil
 }
 
@@ -82,4 +87,20 @@ func (c *Cache) DeleteFromMemcache(key string) {
 }
 func (c *Cache) DeleteAllFromMemcache() {
 	c.mc.DeleteAll()
+}
+func (c *Cache) SetKey(key string) {
+    c.lock.Lock()
+    c.key[key] = key
+    defer c.lock.Unlock()
+}
+func (c *Cache) DeleteFromMemcacheBySearch(key string) {
+	 var match = regexp.MustCompile(key)
+	c.lock.RLock()
+	for skey, _ := range c.key {
+		r := match.MatchString(skey)
+		if r == true {
+			c.mc.Delete(key)
+		}
+	}
+	defer c.lock.RUnlock()
 }
