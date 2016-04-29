@@ -12,11 +12,11 @@ import (
 type Cache struct {
 	mc *memcache.Client
 	lock sync.RWMutex
-    key map[string]string
+	key map[string]string
 }
 
 func NewCache(hostAndPort string) *Cache {
-	return &Cache{mc: memcache.New(hostAndPort)}
+	return &Cache{mc: memcache.New(hostAndPort), key: make(map[string]string)}
 }
 
 func init() {
@@ -90,7 +90,9 @@ func (c *Cache) DeleteAllFromMemcache() {
 }
 func (c *Cache) SetKey(key string) {
     c.lock.Lock()
-    c.key[key] = key
+    if key != "" {
+	  c.key[key] = key
+    }
     defer c.lock.Unlock()
 }
 func (c *Cache) DeleteFromMemcacheBySearch(key string) {
@@ -99,7 +101,12 @@ func (c *Cache) DeleteFromMemcacheBySearch(key string) {
 	for skey, _ := range c.key {
 		r := match.MatchString(skey)
 		if r == true {
-			c.mc.Delete(key)
+			if err := c.mc.Delete(skey); err != nil {
+				log.Println("Error `DeleteFromMemcacheBySearch`: key is not deleted %s %v", skey, err)
+			} else {
+				log.Println("`DeleteFromMemcacheBySearch`: key is deleted from memcache %s", skey)
+				delete(c.key, key)
+			}
 		}
 	}
 	defer c.lock.RUnlock()
