@@ -84,9 +84,13 @@ func (c *Cache) FlushMemcache() {
 }
 func (c *Cache) DeleteFromMemcache(key string) {
 	c.mc.Delete(key)
+	delete(c.key, key)
 }
 func (c *Cache) DeleteAllFromMemcache() {
 	c.mc.DeleteAll()
+	for skey, _ := range c.key {
+		delete(c.key, skey)
+	}
 }
 func (c *Cache) SetKey(key string) {
     c.lock.Lock()
@@ -103,9 +107,10 @@ func (c *Cache) DeleteFromMemcacheBySearch(key string) {
 		if r == true {
 			if err := c.mc.Delete(skey); err != nil {
 				log.Println("Error `DeleteFromMemcacheBySearch`: key is not deleted %s %v", skey, err)
+				delete(c.key, skey)
 			} else {
 				log.Println("`DeleteFromMemcacheBySearch`: key is deleted from memcache %s", skey)
-				delete(c.key, key)
+				delete(c.key, skey)
 			}
 		}
 	}
