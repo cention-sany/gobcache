@@ -11,7 +11,7 @@ import (
 
 type Cache struct {
 	mc *memcache.Client
-	lock sync.RWMutex
+	lock sync.Mutex
 	key map[string]string
 }
 
@@ -84,13 +84,19 @@ func (c *Cache) FlushMemcache() {
 }
 func (c *Cache) DeleteFromMemcache(key string) {
 	c.mc.Delete(key)
+	
+	c.lock.Lock()
 	delete(c.key, key)
+	defer c.lock.Unlock()
 }
 func (c *Cache) DeleteAllFromMemcache() {
 	c.mc.DeleteAll()
+	
+	c.lock.Lock()
 	for skey, _ := range c.key {
 		delete(c.key, skey)
 	}
+	defer c.lock.Unlock()
 }
 func (c *Cache) SetKey(key string) {
     c.lock.Lock()
@@ -101,7 +107,7 @@ func (c *Cache) SetKey(key string) {
 }
 func (c *Cache) DeleteFromMemcacheBySearch(key string) {
 	 var match = regexp.MustCompile(key)
-	c.lock.RLock()
+	c.lock.Lock()
 	for skey, _ := range c.key {
 		r := match.MatchString(skey)
 		if r == true {
@@ -114,5 +120,5 @@ func (c *Cache) DeleteFromMemcacheBySearch(key string) {
 			}
 		}
 	}
-	defer c.lock.RUnlock()
+	defer c.lock.Unlock()
 }
