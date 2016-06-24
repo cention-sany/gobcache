@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"log"
+	"strings"
 
 	"github.com/bradfitz/gomemcache/memcache"
 )
@@ -77,9 +78,15 @@ func (c *Cache) GetRawFromMemcache(key string) (*memcache.Item, error) {
 func (c *Cache) FlushMemcache() {
 	c.mc.FlushAll()
 }
+
 func (c *Cache) DeleteFromMemcache(key string) {
+	n := strings.LastIndex(key, "/")
+	if !(n < 0) {
+		c.mc.Delete(key[:n]) // delete ferite generate key too
+	}
 	c.mc.Delete(key)
 }
+
 func (c *Cache) DeleteAllFromMemcache() {
 	c.mc.DeleteAll()
 }
